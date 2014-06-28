@@ -1,0 +1,47 @@
+From 473003f3da0631085b4148ff418403ab3faa7643 Mon Sep 17 00:00:00 2001
+From: Stefan Tauner <stefan.tauner@student.tuwien.ac.at>
+Date: Mon, 18 Feb 2013 14:15:09 +0100
+Subject: [RFC PATCH] usb/core: add current frame_number sysfs attr to hcd
+
+This allows user space to retrieve the current frame number on a USB
+as returned by usb_get_current_frame_number(...) via sysfs.
+
+Signed-off-by: Stefan Tauner <stefan.tauner@gmx.at>
+---
+ drivers/usb/core/hcd.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/drivers/usb/core/hcd.c b/drivers/usb/core/hcd.c
+index 8e64adf..9c8e9ab 100644
+--- a/drivers/usb/core/hcd.c
++++ b/drivers/usb/core/hcd.c
+@@ -862,10 +862,26 @@ static DEVICE_ATTR(authorized_default, 0644,
+ 	    usb_host_authorized_default_show,
+ 	    usb_host_authorized_default_store);
+ 
++/*
++ * Show the current frame number as returned by usb_get_current_frame_number()
++ * (or a negative value in the case of errors)
++ */
++static ssize_t usb_bus_frame_number_show(struct device *dev,
++					 struct device_attribute *attr,
++					 char *buf)
++{
++	struct usb_device *rh_usb_dev = to_usb_device(dev);
++	int fn = usb_get_current_frame_number(rh_usb_dev);
++	return snprintf(buf, PAGE_SIZE, "%d\n", fn);
++}
++
++static DEVICE_ATTR(frame_number, S_IRUGO, usb_bus_frame_number_show, NULL);
++
+ 
+ /* Group all the USB bus attributes */
+ static struct attribute *usb_bus_attrs[] = {
+ 		&dev_attr_authorized_default.attr,
++		&dev_attr_frame_number.attr,
+ 		NULL,
+ };
+ 
+-- 
+Kind regards, Stefan Tauner
+
